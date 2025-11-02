@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            width: auto;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .score-box {
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .score-box.success {
+            background: #d1fae5;
+            border: 3px solid #10b981;
+            color: #065f46;
+        }
+
+        .score-box.warning {
+            background: #fef3c7;
+            border: 3px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .score-box.error {
+            background: #fee2e2;
+            border: 3px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .question-card {
+            background: #f9fafb;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: #e0e7ff;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .option.disabled {
+            cursor: default;
+        }
+
+        .option.disabled:hover {
+            transform: none;
+        }
+
+        .option-letter {
+            font-weight: bold;
+            color: #4b5563;
+            min-width: 25px;
+        }
+
+        .icon {
+            margin-left: auto;
+            font-size: 1.3em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Business Studies</h1>
+            <p>VENTURES 2</p>
+        </div>
+
+        <button class="btn btn-secondary" onclick="resetQuiz()" id="resetBtn" style="display: none;">↻ Retake Quiz</button>
+
+        <div id="scoreBox" class="hidden"></div>
+        <div id="questionsContainer"></div>
+        <div id="submitSection">
+            <button class="btn" onclick="submitQuiz()">Submit Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // PASTE YOUR MCQ QUESTIONS HERE
+        // ==========================================
+        // Format: Copy and paste your questions below between the [ and ]
+        // Mark correct answers with **bold** or UPPERCASE
+        // Example:
+        // "1. What is the capital of France?\nA) London\nB) **Paris**\nC) Berlin\nD) Madrid"
+        
+        const mcqText = `
+        
+SECTION A: Management and Leadership (20 Questions)
+    1. What is the main focus of management?
+A) Controlling and directing business activities
+B) Motivating employees through inspiration
+C) Promoting products to customers
+D) Training only new staff members
+    2. What is the main focus of leadership?
+A) Inspiring and motivating people to achieve goals
+B) Planning and budgeting only
+C) Recording daily sales
+D) Designing office layouts
+    3. Which of the following best describes a democratic leader?
+A) Involves employees in decision-making
+B) Takes all decisions alone
+C) Avoids making decisions
+D) Focuses only on profit
+    4. Which leadership style gives employees full freedom in decision-making?
+A) Laissez-faire
+B) Autocratic
+C) Democratic
+D) Charismatic
+    5. What is a characteristic of an autocratic leader?
+A) Takes decisions without consulting employees
+B) Encourages employee participation
+C) Delegates all authority
+D) Focuses only on long-term goals
+    6. Which leadership style motivates employees using rewards and punishments?
+A) Transactional
+B) Transformational
+C) Charismatic
+D) Laissez-faire
+    7. Which leader influences others through personality and charm?
+A) Charismatic
+B) Autocratic
+C) Democratic
+D) Transactional
+    8. Which leadership theory suggests using different styles in different situations?
+A) Situational
+B) Transformational
+C) Charismatic
+D) Transactional
+    9. Transformational leadership is used when the organisation is:
+A) Undergoing major change
+B) Stable and routine
+C) Not growing
+D) Focusing on daily tasks only
+    10. Which theory emphasises teamwork between leaders and followers?
+A) Leaders and Followers
+B) Transformational
+C) Situational
+D) Charismatic
+    11. What is an advantage of democratic leadership?
+A) Encourages participation and creativity
+B) Decisions are made slowly
+C) Leader controls all decisions
+D) Employees are not consulted
+    12. What is a disadvantage of autocratic leadership?
+A) May cause tension among employees
+B) Leads to quick decisions
+C) Promotes discipline
+D) Improves communication
+    13. What is a benefit of laissez-faire leadership?
+A) Encourages employee growth and independence
+B) Decisions are made instantly
+C) Reduces employee responsibility
+D) Eliminates teamwork
+    14. What is a drawback of charismatic leadership?
+A) Organisation may depend too much on the leader
+B) Employees lose motivation
+C) Decision-making is delayed
+D) No emotional connection
+    15. What is a disadvantage of transactional leadership?
+A) May increase stress and reduce motivation
+B) Improves performance
+C) Clarifies rewards
+D) Enhances focus on targets
+    16. What is the effect of a leader’s positive attitude?
+A) Increases employee motivation and morale
+B) Creates confusion
+C) Reduces productivity
+D) Leads to high absenteeism
+    17. What is the effect of a leader’s negative attitude?
+A) Decreases employee motivation
+B) Improves teamwork
+C) Increases creativity
+D) Leads to better communication
+    18. Which statement about management is true?
+A) Focuses on processes and control
+B) Focuses on emotional connection
+C) Encourages creative freedom
+D) Avoids accountability
+    19. Which statement about leadership is true?
+A) Focuses on human capital and motivation
+B) Focuses only on administrative tasks
+C) Avoids communication
+D) Emphasises routine work
+    20. What is the main role of leadership?
+A) Guiding and inspiring employees toward goals
+B) Planning production schedules
+C) Calculating profit margins
+D) Supervising machinery
+
+🟦 SECTION B: Forms of Ownership (15 Questions)
+    21. Which ownership form is easiest and cheapest to start?
+A) Sole trader
+B) Private company
+C) Partnership
+D) Close corporation
+    22. Which ownership form has unlimited liability?
+A) Sole trader
+B) Private company
+C) Public company
+D) Close corporation
+    23. Which form of ownership continues after the owner's death?
+A) Private company
+B) Sole trader
+C) Partnership
+D) Co-operative
+    24. What is a major advantage of a partnership?
+A) More capital and shared responsibilities
+B) Easy decision-making
+C) Limited liability
+D) Only one owner
+    25. Which ownership form is registered with CIPC and issues shares?
+A) Private company
+B) Sole trader
+C) Partnership
+D) Close corporation
+    26. Which ownership form allows unlimited shareholders?
+A) Public company
+B) Private company
+C) Partnership
+D) Sole trader
+    27. What is a main disadvantage of a partnership?
+A) Partners are jointly liable for debts
+B) Easy to raise capital
+C) Limited liability
+D) Continuity after death
+    28. Which ownership form must have a Memorandum of Incorporation (MOI)?
+A) Private company
+B) Sole trader
+C) Partnership
+D) Close corporation
+    29. Which form of ownership can be easily converted to a company?
+A) Close corporation
+B) Sole trader
+C) Partnership
+D) Public company
+    30. Which type of business has legal personality and limited liability?
+A) Company
+B) Partnership
+C) Sole trader
+D) Franchise
+    31. What is a disadvantage of a public company?
+A) Financial statements are public
+B) Continuity
+C) Limited liability
+D) Access to capital
+    32. Which ownership form is not allowed to sell shares to the public?
+A) Private company
+B) Public company
+C) Co-operative
+D) Close corporation
+    33. Which ownership form allows only 1 to 10 members?
+A) Close corporation
+B) Partnership
+C) Private company
+D) Public company
+    34. Which ownership form requires a qualified accountant?
+A) Private company
+B) Sole trader
+C) Partnership
+D) Close corporation
+    35. What is a main advantage of a private company?
+A) Limited liability for owners
+B) Unlimited liability
+C) No registration required
+D) Single owner
+
+🟨 SECTION C: Presentations (15 Questions)
+    36. What is the first step before preparing a presentation?
+A) Understand the audience and topic
+B) Create slides immediately
+C) Add images
+D) Print handouts
+    37. What should a presenter do before presenting?
+A) Rehearse and check equipment
+B) Ignore audience needs
+C) Avoid preparation
+D) Memorize word-for-word
+    38. Which is a key factor during a presentation?
+A) Maintain eye contact
+B) Read slides directly
+C) Stand still and quiet
+D) Avoid gestures
+    39. What helps to engage an audience during a presentation?
+A) Using visual aids effectively
+B) Speaking very fast
+C) Avoiding movement
+D) Ignoring questions
+    40. What should presenters avoid during a presentation?
+A) Speaking too fast
+B) Pausing for emphasis
+C) Using gestures
+D) Maintaining eye contact
+    41. What is important when responding to questions after a presentation?
+A) Be professional and non-aggressive
+B) Ignore difficult questions
+C) Argue with audience
+D) End presentation immediately
+    42. What should presenters do after receiving feedback?
+A) Use it to improve future presentations
+B) Ignore all comments
+C) Defend themselves
+D) Avoid reflection
+    43. What is a non-verbal presentation example?
+A) A written report
+B) A speech
+C) A podcast
+D) An interview
+    44. Which is an example of a visual aid?
+A) A pie chart
+B) A printed essay
+C) An audio clip
+D) A paragraph
+    45. What is an advantage of visual aids?
+A) Make information clearer and engaging
+B) Distract the audience
+C) Replace the speaker
+D) Take more time
+    46. What is a disadvantage of visual aids?
+A) May fail due to technical problems
+B) Always increase clarity
+C) Never need preparation
+D) Always impress audiences
+    47. What is an important design step in multimedia presentations?
+A) Start with text and add visuals
+B) Begin with animations only
+C) Skip content planning
+D) Avoid graphs
+    48. When preparing slides, what should you avoid?
+A) Overloading slides with text
+B) Using short bullet points
+C) Using visuals
+D) Ensuring readability
+    49. What is the best way to handle audience feedback?
+A) Listen respectfully and thank them
+B) Interrupt them
+C) Ignore their input
+D) Criticize their opinions
+    50. How can pauses be used effectively during a presentation?
+A) To emphasise key points and control pace
+B) To waste time
+C) To confuse listeners
+D) To end early
+
+        `;
+
+        // ==========================================
+        // DO NOT EDIT BELOW THIS LINE
+        // ==========================================
+        
+        function parseQuestions(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const parsed = [];
+            let currentQuestion = null;
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+
+                if (/^\d+\./.test(trimmed)) {
+                    if (currentQuestion && currentQuestion.options.length > 0) {
+                        parsed.push(currentQuestion);
+                    }
+                    currentQuestion = {
+                        id: parsed.length,
+                        question: trimmed.replace(/^\d+\.\s*/, ''),
+                        options: [],
+                        correctAnswer: null
+                    };
+                }
+                else if (/^[A-D][.)]\s/.test(trimmed) && currentQuestion) {
+                    const optionLetter = trimmed[0];
+                    const optionText = trimmed.replace(/^[A-D][.)]\s*/, '');
+                    
+                    currentQuestion.options.push({
+                        letter: optionLetter,
+                        text: optionText
+                    });
+                    
+                    const hasHighlight = /\*\*.*\*\*|\*.*\*|__.*__|[A-Z]{3,}/.test(optionText);
+                    if (hasHighlight || trimmed.includes('✓') || trimmed.includes('(correct)')) {
+                        currentQuestion.correctAnswer = optionLetter;
+                    }
+                }
+            });
+
+            if (currentQuestion && currentQuestion.options.length > 0) {
+                parsed.push(currentQuestion);
+            }
+
+            return parsed;
+        }
+
+        const questions = parseQuestions(mcqText);
+        let userAnswers = {};
+        let quizSubmitted = false;
+
+        function displayQuiz() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-text';
+                questionDiv.textContent = (idx + 1) + '. ' + q.question;
+                card.appendChild(questionDiv);
+
+                q.options.forEach(opt => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    optionDiv.setAttribute('data-qid', q.id);
+                    optionDiv.setAttribute('data-letter', opt.letter);
+                    optionDiv.onclick = function() { selectAnswer(q.id, opt.letter); };
+                    
+                    const letterSpan = document.createElement('span');
+                    letterSpan.className = 'option-letter';
+                    letterSpan.textContent = opt.letter + ')';
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = opt.text.replace(/\*\*|\*|__|✓|\(correct\)/g, '');
+                    
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'icon';
+                    iconSpan.id = 'icon-' + q.id + '-' + opt.letter;
+                    
+                    optionDiv.appendChild(letterSpan);
+                    optionDiv.appendChild(textSpan);
+                    optionDiv.appendChild(iconSpan);
+                    
+                    card.appendChild(optionDiv);
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        function selectAnswer(questionId, answer) {
+            if (quizSubmitted) return;
+
+            userAnswers[questionId] = answer;
+
+            const allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(opt => {
+                const qId = parseInt(opt.getAttribute('data-qid'));
+                const optLetter = opt.getAttribute('data-letter');
+                
+                if (qId === questionId) {
+                    if (optLetter === answer) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                }
+            });
+        }
+
+        function submitQuiz() {
+            if (Object.keys(userAnswers).length !== questions.length) {
+                alert('Please answer all questions before submitting!');
+                return;
+            }
+
+            quizSubmitted = true;
+
+            let correct = 0;
+            questions.forEach(q => {
+                q.options.forEach(opt => {
+                    const iconId = 'icon-' + q.id + '-' + opt.letter;
+                    const icon = document.getElementById(iconId);
+                    const optionDiv = icon.parentElement;
+                    
+                    optionDiv.classList.add('disabled');
+                    optionDiv.classList.remove('selected');
+                    
+                    if (opt.letter === q.correctAnswer) {
+                        optionDiv.classList.add('correct');
+                        icon.innerHTML = '✓';
+                        icon.style.color = '#10b981';
+                    }
+                    
+                    if (userAnswers[q.id] === opt.letter && opt.letter !== q.correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                        icon.innerHTML = '✗';
+                        icon.style.color = '#ef4444';
+                    }
+                });
+
+                if (userAnswers[q.id] === q.correctAnswer) {
+                    correct++;
+                }
+            });
+
+            const percentage = Math.round((correct / questions.length) * 100);
+            const scoreBox = document.getElementById('scoreBox');
+            
+            let scoreClass = 'error';
+            let message = '📚 Keep practicing!';
+            
+            if (percentage >= 90) {
+                scoreClass = 'success';
+                message = '🎉 Excellent work!';
+            } else if (percentage >= 70) {
+                scoreClass = 'success';
+                message = '👍 Good job!';
+            } else if (percentage >= 50) {
+                scoreClass = 'warning';
+                message = '💪 Not bad, keep going!';
+            }
+            
+            scoreBox.className = 'score-box ' + scoreClass;
+            scoreBox.innerHTML = '<div>Score: ' + correct + ' / ' + questions.length + ' (' + percentage + '%)</div><div style="margin-top: 10px; font-size: 0.9em;">' + message + '</div>';
+            scoreBox.classList.remove('hidden');
+
+            document.getElementById('submitSection').classList.add('hidden');
+            document.getElementById('resetBtn').style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            userAnswers = {};
+            quizSubmitted = false;
+
+            document.getElementById('scoreBox').classList.add('hidden');
+            document.getElementById('submitSection').classList.remove('hidden');
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            displayQuiz();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        displayQuiz();
+    </script>
+</body>
+</html>
